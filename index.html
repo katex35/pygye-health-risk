@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heart Disease Prediction - Health Assessment</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        /* UnicornStudio animation background - Full screen */
+        #unicorn-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        #unicorn-background > div {
+            width: 100vw !important;
+            height: 100vh !important;
+            object-fit: cover;
+        }
+
+        /* Main layout container */
+        .main-layout {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 40px;
+            gap: 60px;
+            overflow: hidden;
+            max-height: 100vh;
+        }
+
+        /* Enhanced glassmorphism for form area */
+        .form-section {
+            flex: 1;
+            max-width: 480px;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 35px;
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            animation: fadeInLeft 1s ease-out 2s forwards;
+        }
+
+        .form-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        }
+
+        /* Enhanced glassmorphism for result area */
+        .result-section {
+            flex: 1;
+            max-width: 480px;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 35px;
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            min-height: 420px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            animation: fadeInRight 1s ease-out 2.2s forwards;
+        }
+
+        .result-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            color: #ffffff;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            font-weight: 600;
+        }
+
+        .header p {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 18px;
+            margin-bottom: 25px;
+            max-height: 55vh;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        .form-group {
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            color: #ffffff;
+            font-weight: 500;
+        }
+
+        .form-group input::placeholder,
+        .form-group select option {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .form-group select option {
+            background: rgba(20, 20, 20, 0.9);
+            color: #ffffff;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: rgba(76, 175, 80, 0.6);
+            background: rgba(0, 0, 0, 0.5);
+            box-shadow: 
+                0 0 0 3px rgba(76, 175, 80, 0.2),
+                0 4px 20px rgba(76, 175, 80, 0.1);
+        }
+
+        .form-group .help-text {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 4px;
+            font-style: italic;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: rgba(76, 175, 80, 0.7);
+            backdrop-filter: blur(10px);
+            color: white;
+            border: 1px solid rgba(76, 175, 80, 0.5);
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        .submit-btn:hover {
+            background: rgba(76, 175, 80, 0.9);
+        }
+
+        .submit-btn:disabled {
+            background: rgba(150, 150, 150, 0.3);
+            cursor: not-allowed;
+            border-color: rgba(150, 150, 150, 0.3);
+        }
+
+        .result-container {
+            text-align: center;
+            display: none;
+        }
+
+        .result-healthy {
+            color: #4CAF50;
+        }
+
+        .result-unhealthy {
+            color: #ff5252;
+        }
+
+        .result-container h3 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            font-weight: 600;
+        }
+
+        .result-container p {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
+            line-height: 1.5;
+        }
+
+        .probability {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 20px 0;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        .loading p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.1rem;
+            text-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: rgba(244, 67, 54, 0.8);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 20px;
+            display: none;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        .welcome-message {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        .welcome-message i {
+            font-size: 3rem;
+            color: #4CAF50;
+            margin-bottom: 20px;
+            display: block;
+            text-shadow: 0 2px 10px rgba(76, 175, 80, 0.5);
+        }
+
+        .welcome-message h3 {
+            color: #ffffff;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+            font-weight: 600;
+        }
+
+        /* Responsive design */
+        @media (max-width: 1200px) {
+            .main-layout {
+                flex-direction: column;
+                padding: 20px;
+                gap: 30px;
+            }
+            
+            .form-section,
+            .result-section {
+                max-width: 600px;
+                width: 100%;
+            }
+
+            .form-grid {
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                max-height: none;
+                overflow: visible;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .form-section,
+            .result-section {
+                padding: 25px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Enhanced custom scrollbar */
+        .form-grid::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .form-grid::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .form-grid::-webkit-scrollbar-thumb {
+            background: rgba(76, 175, 80, 0.6);
+            border-radius: 3px;
+        }
+
+        .form-grid::-webkit-scrollbar-thumb:hover {
+            background: rgba(76, 175, 80, 0.8);
+        }
+
+        /* Fade-in animations */
+        @keyframes fadeInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Random fill button */
+        .random-fill-btn {
+            width: 100%;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            color: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+        }
+
+        .random-fill-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        /* Info tooltips for form fields */
+        .field-info {
+            position: relative;
+            display: inline-block;
+            margin-left: 5px;
+            cursor: help;
+        }
+
+        .field-info i {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.8rem;
+        }
+
+        .field-info:hover i {
+            color: rgba(76, 175, 80, 0.8);
+        }
+
+        .field-info .tooltip {
+            visibility: hidden;
+            width: 200px;
+            background: rgba(0, 0, 0, 0.9);
+            color: #ffffff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1000;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .field-info .tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: rgba(0, 0, 0, 0.9) transparent transparent transparent;
+        }
+
+        .field-info:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <!-- UnicornStudio Background Animation -->
+    <div id="unicorn-background">
+        <div data-us-project="MKqZQ8KCoN7V9kQqSkGc"></div>
+    </div>
+
+    <!-- Main Layout -->
+    <div class="main-layout">
+        <!-- Form Section - Left Light Area -->
+        <div class="form-section">
+            <div class="header">
+                <h1>
+                    <i class="fas fa-heartbeat"></i>
+                    Heart Health Analysis
+                </h1>
+                <p>AI-powered health assessment tool</p>
+            </div>
+
+            <button type="button" class="random-fill-btn" id="randomFillBtn">
+                <i class="fas fa-dice"></i>
+                Fill with Random Test Data
+            </button>
+
+            <form id="healthForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="age">
+                            <i class="fas fa-calendar-alt"></i> Age
+                            <span class="field-info">
+                                <i class="fas fa-info-circle"></i>
+                                <span class="tooltip">Range: 1-120 years<br>Typical range: 20-80 years</span>
+                            </span>
+                        </label>
+                        <input type="number" id="age" name="age" min="1" max="120" required>
+                        <div class="help-text">Your age in years (1-120)</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sex">
+                            <i class="fas fa-venus-mars"></i> Gender
+                        </label>
+                        <select id="sex" name="sex" required>
+                            <option value="">Select gender</option>
+                            <option value="1">Male</option>
+                            <option value="0">Female</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cp">
+                            <i class="fas fa-lungs"></i> Chest Pain Type
+                        </label>
+                        <select id="cp" name="cp" required>
+                            <option value="">Select type</option>
+                            <option value="0">Typical Angina</option>
+                            <option value="1">Atypical Angina</option>
+                            <option value="2">Non-Anginal Pain</option>
+                            <option value="3">Asymptomatic</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="trestbps">
+                            <i class="fas fa-tachometer-alt"></i> Resting Blood Pressure
+                            <span class="field-info">
+                                <i class="fas fa-info-circle"></i>
+                                <span class="tooltip">Range: 80-200 mm Hg<br>Normal: ~120 mm Hg<br>High: >140 mm Hg</span>
+                            </span>
+                        </label>
+                        <input type="number" id="trestbps" name="trestbps" min="80" max="200" required>
+                        <div class="help-text">In mm Hg (80-200, normal: ~120)</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="chol">
+                            <i class="fas fa-vial"></i> Cholesterol Level
+                            <span class="field-info">
+                                <i class="fas fa-info-circle"></i>
+                                <span class="tooltip">Range: 100-600 mg/dl<br>Normal: <200 mg/dl<br>High: >240 mg/dl</span>
+                            </span>
+                        </label>
+                        <input type="number" id="chol" name="chol" min="100" max="600" required>
+                        <div class="help-text">In mg/dl (100-600, normal: <200)</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fbs">
+                            <i class="fas fa-cube"></i> Fasting Blood Sugar
+                        </label>
+                        <select id="fbs" name="fbs" required>
+                            <option value="">Select level</option>
+                            <option value="0">≤ 120 mg/dl (Normal)</option>
+                            <option value="1">> 120 mg/dl (High)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="restecg">
+                            <i class="fas fa-heart-broken"></i> Resting ECG
+                        </label>
+                        <select id="restecg" name="restecg" required>
+                            <option value="">Select result</option>
+                            <option value="0">Normal</option>
+                            <option value="1">ST-T wave abnormality</option>
+                            <option value="2">Left ventricular hypertrophy</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="thalach">
+                            <i class="fas fa-heartbeat"></i> Max Heart Rate
+                            <span class="field-info">
+                                <i class="fas fa-info-circle"></i>
+                                <span class="tooltip">Range: 60-220 bpm<br>Normal max: ~220-age<br>Athletes: often higher</span>
+                            </span>
+                        </label>
+                        <input type="number" id="thalach" name="thalach" min="60" max="220" required>
+                        <div class="help-text">Maximum heart rate achieved (60-220 bpm)</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="exang">
+                            <i class="fas fa-running"></i> Exercise Induced Angina
+                        </label>
+                        <select id="exang" name="exang" required>
+                            <option value="">Select option</option>
+                            <option value="0">No</option>
+                            <option value="1">Yes</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="oldpeak">
+                            <i class="fas fa-chart-line"></i> ST Depression
+                            <span class="field-info">
+                                <i class="fas fa-info-circle"></i>
+                                <span class="tooltip">Range: 0.0-10.0<br>Normal: 0.0-1.0<br>Abnormal: >2.0</span>
+                            </span>
+                        </label>
+                        <input type="number" id="oldpeak" name="oldpeak" min="0" max="10" step="0.1" required>
+                        <div class="help-text">Exercise relative to rest (0.0-10.0)</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="slope">
+                            <i class="fas fa-trending-up"></i> ST Segment Slope
+                        </label>
+                        <select id="slope" name="slope" required>
+                            <option value="">Select slope</option>
+                            <option value="0">Upsloping</option>
+                            <option value="1">Flat</option>
+                            <option value="2">Downsloping</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ca">
+                            <i class="fas fa-microscope"></i> Fluoroscopy Vessels
+                        </label>
+                        <select id="ca" name="ca" required>
+                            <option value="">Select count</option>
+                            <option value="0">0 vessels</option>
+                            <option value="1">1 vessel</option>
+                            <option value="2">2 vessels</option>
+                            <option value="3">3 vessels</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="thal">
+                            <i class="fas fa-dna"></i> Thalassemia
+                        </label>
+                        <select id="thal" name="thal" required>
+                            <option value="">Select result</option>
+                            <option value="1">Normal</option>
+                            <option value="2">Fixed defect</option>
+                            <option value="3">Reversible defect</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    <i class="fas fa-stethoscope"></i>
+                    Analyze Health Status
+                </button>
+            </form>
+
+            <div class="error-message" id="errorMessage"></div>
+        </div>
+
+        <!-- Result Section - Right Light Area -->
+        <div class="result-section">
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Analyzing your health data...</p>
+            </div>
+
+            <div class="result-container" id="resultContainer">
+                <h3 id="resultTitle"></h3>
+                <div class="probability" id="probabilityText"></div>
+                <p id="resultDescription"></p>
+            </div>
+
+            <div class="welcome-message" id="welcomeMessage">
+                <i class="fas fa-heart"></i>
+                <h3>Analyze Your Heart Health</h3>
+                <p>Fill out the form on the left to get an AI-powered health assessment.</p>
+                <p><strong>Note:</strong> This is for educational purposes only. Consult a doctor for medical advice.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- UnicornStudio Script -->
+    <script type="text/javascript">!function(){if(!window.UnicornStudio){window.UnicornStudio={isInitialized:!1};var i=document.createElement("script");i.src="https://cdn.jsdelivr.net/gh/hiunicornstudio/unicornstudio.js@v1.4.25/dist/unicornStudio.umd.js",i.onload=function(){window.UnicornStudio.isInitialized||(UnicornStudio.init(),window.UnicornStudio.isInitialized=!0)},(document.head || document.body).appendChild(i)}}();</script>
+
+    <script>
+        const API_BASE_URL = ''; // Same origin, no need for full URL
+
+        document.getElementById('healthForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const loading = document.getElementById('loading');
+            const resultContainer = document.getElementById('resultContainer');
+            const errorMessage = document.getElementById('errorMessage');
+            const welcomeMessage = document.getElementById('welcomeMessage');
+            
+            // Hide previous results and welcome message
+            resultContainer.style.display = 'none';
+            errorMessage.style.display = 'none';
+            welcomeMessage.style.display = 'none';
+            
+            // Show loading
+            loading.style.display = 'block';
+            submitBtn.disabled = true;
+            
+            try {
+                // Collect form data
+                const formData = new FormData(this);
+                const data = {};
+                
+                for (let [key, value] of formData.entries()) {
+                    data[key] = parseFloat(value);
+                }
+                
+                // Make API request
+                const response = await fetch(`${API_BASE_URL}/api/predict`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.error || 'Prediction failed');
+                }
+                
+                // Display results
+                displayResult(result);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                errorMessage.textContent = `Error: ${error.message}`;
+                errorMessage.style.display = 'block';
+                welcomeMessage.style.display = 'block';
+            } finally {
+                // Hide loading
+                loading.style.display = 'none';
+                submitBtn.disabled = false;
+            }
+        });
+        
+        function displayResult(result) {
+            const resultContainer = document.getElementById('resultContainer');
+            const resultTitle = document.getElementById('resultTitle');
+            const probabilityText = document.getElementById('probabilityText');
+            const resultDescription = document.getElementById('resultDescription');
+            
+            const isHealthy = result.prediction === 0;
+            const probability = (result.probability * 100).toFixed(1);
+            
+            // Remove previous classes
+            resultContainer.classList.remove('result-healthy', 'result-unhealthy');
+            
+            if (isHealthy) {
+                resultContainer.classList.add('result-healthy');
+                resultTitle.innerHTML = '<i class="fas fa-check-circle"></i> Low Risk';
+                probabilityText.textContent = `${(100 - probability)}% chance of being healthy`;
+                resultDescription.textContent = 'Based on the provided data, you have a low risk of heart disease. Continue maintaining a healthy lifestyle!';
+            } else {
+                resultContainer.classList.add('result-unhealthy');
+                resultTitle.innerHTML = '<i class="fas fa-exclamation-triangle"></i> High Risk';
+                probabilityText.textContent = `${probability}% risk probability`;
+                resultDescription.textContent = 'The analysis indicates potential heart disease risk. Please consult with a healthcare professional for proper medical evaluation.';
+            }
+            
+            resultContainer.style.display = 'block';
+        }
+        
+        // Generate random realistic medical data for testing
+        function fillSampleData() {
+            // Helper function to generate random number in range
+            function randomInt(min, max) {
+                return Math.floor(Math.random() * (max - min + 1)) + min;
+            }
+            
+            function randomFloat(min, max, decimals = 1) {
+                return parseFloat((Math.random() * (max - min) + min).toFixed(decimals));
+            }
+            
+            // Generate realistic random values
+            document.getElementById('age').value = randomInt(25, 75);
+            document.getElementById('sex').value = randomInt(0, 1);
+            document.getElementById('cp').value = randomInt(0, 3);
+            document.getElementById('trestbps').value = randomInt(90, 180);
+            document.getElementById('chol').value = randomInt(150, 400);
+            document.getElementById('fbs').value = randomInt(0, 1);
+            document.getElementById('restecg').value = randomInt(0, 2);
+            document.getElementById('thalach').value = randomInt(100, 200);
+            document.getElementById('exang').value = randomInt(0, 1);
+            document.getElementById('oldpeak').value = randomFloat(0, 5, 1);
+            document.getElementById('slope').value = randomInt(0, 2);
+            document.getElementById('ca').value = randomInt(0, 3);
+            document.getElementById('thal').value = randomInt(1, 3);
+        }
+        
+        // Add click listener to random fill button
+        document.getElementById('randomFillBtn').addEventListener('click', fillSampleData);
+    </script>
+</body>
+</html>
